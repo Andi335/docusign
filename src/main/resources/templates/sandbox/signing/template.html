@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script th:src="${contextPath}+'/webjars/jquery/3.4.1/jquery.js'"></script>
+	<script th:src="${contextPath}+'/webjars/mustache/2.3.0/mustache.js'"></script>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		let endpoint = /*[[${endpoint}]]*/ 'no-url';
+		/*]]>*/
+	</script>
+	<script type="application/javascript">
+		let templateJSON;
+
+		$(document).ready(
+			function () {
+				init();
+			}
+		);
+
+		function init() {
+
+			$.ajax(
+				endpoint,
+				{
+					success: function (data, status, xhr) {
+						let template = $('#chooseTemplateTmpl').html();
+						let html = "empty";
+						templateJSON = data;
+						console.debug(data);
+						html = Mustache.to_html(template, data);
+						$('#templateChooser').html(html)
+					}
+				}
+			)
+		}
+
+		function onChangedTemplateChoice() {
+			console.debug(">>>");
+			let templateId = document.getElementById('templateIdChoice').value;
+			console.debug(templateId);
+			console.debug(templateJSON);
+			if (templateJSON) {
+				let choosenTemplateData = templateJSON['listTemplates'].find(e => {
+					return e.id === templateId
+				});
+				let template = $('#viewTemplateInfo').html();
+				choosenTemplateData['recipientDigSigs'] = choosenTemplateData['recipientDigSigs'].map((e, i) => {
+					return Object.assign(e, {counter: i})
+				});
+				console.debug(choosenTemplateData);
+				let html = Mustache.to_html(template, choosenTemplateData);
+				$('#templateRoles').html(html)
+			}
+		}
+	</script>
+
+	<script id="chooseTemplateTmpl" type="text/template">
+		<h2>Available Templates</h2>
+		<div> <p>Choose one template which you want to use for your envelope.</p>
+
+			<select name="templateId" onchange="onChangedTemplateChoice()" id="templateIdChoice">
+			{{#listTemplates}}
+			<option name="{{id}}" id="{{id}}" value="{{id}}">{{templateResultsName}}</option>
+			{{/listTemplates}}
+		</select>
+	</script>
+
+	<script id="viewTemplateInfo" type="text/template">
+		<p>id: {{id}}</p>
+		<p>Documents</p>
+		<ul>
+			{{#papers}}
+			<li>{{title}}</li>
+			{{/papers}}
+		</ul>
+
+		<p>Roles</p>
+		<p>Define the name and email adress for the roles</p>
+		<table border="1">
+			<thead>
+			<tr>
+				<th>role</th>
+				<th>name</th>
+				<th>mail</th>
+			</tr>
+			</thead>
+			<tbody>
+			{{#recipientDigSigs}}
+			<tr>
+				<input type="hidden" id="role{{counter}}" name="role[{{counter}}]" value="{{role}}">
+				<td><b>{{role}}</b></td>
+				<td><input type="text" id="name[{{counter}}]" name="name[{{counter}}]"></td>
+				<td><input type="text" id="email[{{counter}}]" name="email[{{counter}}]"></td>
+			</tr>
+			{{/recipientDigSigs}}
+			</tbody>
+		</table>
+
+	</script>
+
+
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<h1>Start signing process with template</h1>
+
+<form method="get" th:action="${endpointaction}" id="formUseTemplate">
+	<div id="templateChooser"></div>
+	<hr>
+	<div id="templateRoles"></div>
+	<input type="submit" value="use template">
+</form>
+</body>
+</html>

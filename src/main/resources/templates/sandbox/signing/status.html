@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script type="application/javascript">
+		function getStatus() {
+			let endpoint = document.getElementById("endpoint").value;
+			let envelopeId = document.getElementById("envelopeId").value;
+			let xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				document.getElementById("btnGetStatus").disabled = false;
+				if (this.readyState === 4 && this.status === 200) {
+					let response = JSON.parse(xhttp.responseText);
+					document.getElementById("tdStatus").innerHTML = '<b>'+response.status+'</b>';
+				}
+			};
+			document.getElementById("btnGetStatus").disabled = true;
+			xhttp.open("GET", endpoint+"?envelopeId="+envelopeId, true);
+			xhttp.send();
+		}
+	</script>
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<p>Request state of the just now created envelope by clicking the button.</p>
+	<input id="endpoint" th:value="${endpoint}" type="hidden">
+	<input id="envelopeId" th:value="${envelopeId}" type="hidden">
+
+	<table id="statusResponse">
+		<tr>
+			<td>enveopeId:</td><td th:text="${envelopeId}"></td>
+		</tr>
+		<tr>
+			<td>status:</td><td id="tdStatus"><i>not requested yet</i></td>
+		</tr>
+	</table>
+	<button id="btnGetStatus" onclick="getStatus()">request status</button>
+</body>
+</html>

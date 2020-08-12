@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+
+	<script th:src="${contextPath}+'/webjars/jquery/3.4.1/jquery.js'"></script>
+	<script th:src="${contextPath}+'/webjars/mustache/2.3.0/mustache.js'"></script>
+
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		let endpointEnvelopeIds = /*[[${endpointEnvelopeIds}]]*/ 'no-url';
+		let endpointWebhookPolling = /*[[${endpointWebhookPolling}]]*/ 'no-url';
+		/*]]>*/
+	</script>
+
+	<script type="application/javascript">
+
+		const POLLING_INTERVAL = 2000;
+
+		$(document).ready(
+			function () {
+				init();
+			}
+		);
+
+		function init() {
+
+			$.ajax(
+				endpointEnvelopeIds,
+				{
+					success: function (data) {
+						let html = "";
+						console.debug('data',data);
+						if (data.hasOwnProperty('listEnvelopeIds')) {
+							if (data.listEnvelopeIds.length > 0) {
+								html = Mustache.to_html($('#envelopeSelectionTempl').html(), data);
+							}
+							else
+							{
+								html = Mustache.to_html($('#errorMessage').html(), {error: "no envelopes in webhook cache"});
+							}
+							$('#divEnvelopeSelection').html(html)
+						}
+						else {
+							console.error("Data does not contain <listEnvelopeIds>")
+						}
+					}
+				}
+			)
+		}
+
+		function getWebhooks(envelopeId) {
+			$.ajax(
+				endpointWebhookPolling,
+				{
+					data: {
+						envelopeId: envelopeId,
+					},
+					success: function (data) {
+						let html = "";
+						console.debug('data',data);
+						if (data.hasOwnProperty('webhook')
+
+						) {
+							if (data.webhook.hasOwnProperty("envelopeId") &&
+								data.webhook.envelopeId !== null
+							) {
+								html = Mustache.to_html($('#envelopeStatusTmpl').html(), data);
+
+							}
+							else {
+								html = Mustache.to_html($('#errorMessage').html(), {error: "no webhook available"});
+							}
+							$('#divWebhook').html(html)
+						}
+						else {
+							console.error("Data does not contain <webhook>")
+						}
+					}
+				}
+			)
+		}
+
+		function onSelectedEnvelopeId () {
+			let selection = document.getElementById('chosenEnvelopeId');
+			let envelopeId = selection.options[selection.selectedIndex].text;
+			getWebhooks(envelopeId);
+		}
+
+
+		function poll() {
+			let checkPolling = document.getElementById('checkPolling');
+			if (checkPolling.checked) {
+				onSelectedEnvelopeId();
+				setTimeout(poll,POLLING_INTERVAL);
+			}
+
+		}
+	</script>
+
+	<script id="errorMessage" type="text/template">
+		<h4><i>{{error}}</i></h4>
+	</script>
+
+	<script id="envelopeSelectionTempl" type="text/template">
+		<select id="chosenEnvelopeId" name ="chosenEnvelopeId">
+			{{#listEnvelopeIds}}
+			<option value="{{.}}">{{.}}</option>
+			{{/listEnvelopeIds}}
+		</select>
+		<button onclick="onSelectedEnvelopeId()">get latest webhook</button>
+		<label for="checkPolling">poll prototype for available webhooks</label><input type="checkbox" id="checkPolling" onchange="poll()">
+	</script>
+
+
+	<script id="envelopeStatusTmpl" type="text/template">
+		<h2>Webhook:</h2>
+		<table border="1">
+
+			<tbody>
+			{{#webhook}}
+			<tr><td>{{envelopeId}}</td></tr>
+			<tr><td>{{envelopeStatus}}</td></tr>
+			<tr><td>
+					<h3>Signers:</h3>
+					<table border="1">
+						<thead>
+						<tr>
+							<th>name</th>
+							<th>email</th>
+							<th>status</th>
+						</tr>
+						</thead>
+						<tbody>
+						{{#recipientDigSigs}}
+						<tr>
+							<td>{{name}}</td>
+							<td>{{email}}</td>
+							<td>{{status}}</td>
+						</tr>
+						{{/recipientDigSigs}}
+						</tbody>
+					</table>
+
+			</td></tr>
+
+			{{/webhook}}
+			</tbody>
+		</table>
+
+	</script>
+
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<h1>Show latest webhook notification of choosen envelope</h1>
+<button onclick="init()">refresh envelope list</button>
+<div id="divEnvelopeSelection">
+
+</div>
+<div id="divWebhook">
+
+</div>
+</body>
+</html>

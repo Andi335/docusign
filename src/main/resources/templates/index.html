@@ -1,0 +1,41 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script src="/docusign/webjars/jquery/3.4.1/jquery.js"></script>
+	<script src="/docusign/webjars/mustache/2.3.0/mustache.js"></script>
+	<meta charset="UTF-8">
+	<title>DigSig Prototype</title>
+
+	<script type="application/javascript">
+		$(document).ready(
+			function () {
+				init();
+			}
+		);
+
+		function init() {
+			$.ajax(
+				"/docusign/links",
+				{
+					success: function (data, status, xhr) {
+						let buffer="";
+						$.each(Object.keys(data), function(index, key){
+							let val = data[key];
+							buffer+="<li><a href='"+val+"'>"+key+"</a></li></li>";
+						});
+						let ul = $('ul').html(buffer);
+						ul.appendTo($('body'))
+					}
+				}
+			)
+		}
+
+	</script>
+</head>
+<body>
+<h1>Index of DigSig Prototype</h1>
+<ul>
+</ul>
+</body>
+</html>

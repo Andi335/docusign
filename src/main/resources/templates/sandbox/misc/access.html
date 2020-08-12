@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<h1>test access</h1>
+
+<h2 th:text="'user info (class:'+${userInfoClass}+')'"></h2>
+<table>
+	<tr>
+		<td>accId:</td><td th:text="${accIdVal}"></td>
+	</tr>
+	<tr>
+		<td>name:</td><td th:text="${nameVal}"></td>
+	</tr>
+	<tr>
+		<td>email:</td><td th:text="${emailVal}"></td>
+	</tr>
+</table>
+
+<h2>access token</h2>
+<textarea cols="200" rows="5" th:text="${accesstoken}"></textarea>
+
+</body>
+</html>

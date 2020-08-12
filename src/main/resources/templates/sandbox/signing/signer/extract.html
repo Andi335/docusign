@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+
+	<script th:src="${contextPath}+'/webjars/jquery/3.4.1/jquery.js'"></script>
+	<script th:src="${contextPath}+'/webjars/mustache/2.3.0/mustache.js'"></script>
+
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		let endpoint = /*[[${endpoint}]]*/ 'no-url';
+		/*]]>*/
+	</script>
+
+	<script type="application/javascript">
+
+		function getSignerFields () {
+			$.ajax(
+				endpoint,
+				{
+					success: function (data, status, xhr) {
+						//let template = $('#chooseTemplateTmpl').html();
+						//let html = "empty";
+						console.debug(data);
+						//html = Mustache.to_html(template, data);
+						//$('#templateChooser').html(html)
+					}
+				}
+			)
+		}
+
+		function addDocumentField() {
+
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			let nextIndex = divDocumentFields.children.length;
+			divDocumentFields.append(getDocumentFieldNode(nextIndex))
+		}
+
+		function delDocumentField() {
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			if (divDocumentFields.hasChildNodes()) {
+				divDocumentFields.removeChild(divDocumentFields.lastChild);
+			}
+		}
+
+		function getDocumentFieldNode(index) {
+			let id = "document[" + index + "]";
+			let documentFieldNode = document.createElement("input");
+			documentFieldNode.id = id;
+			documentFieldNode.name = id;
+			documentFieldNode.type = "file";
+
+			let divDocuments = document.createElement('div');
+			divDocuments.id = "documentChooser[" + index + "]";
+			divDocuments.tag = "Document " + index;
+			divDocuments.appendChild(documentFieldNode);
+			return divDocuments;
+		}
+
+		$('#fileForm').submit(
+			function () {
+				$('#divDocumentFields').children().forEach(
+					function (child) {
+						console.log(child)
+					}
+				);
+				getSignerFields();
+				return false;
+			}
+		);
+	</script>
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<form method="POST" enctype="multipart/form-data"  th:action="${endpoint}">
+	<h2>Extract signers from documents with "SIGN_" placholders (bookmarks)</h2>
+	<div><p> Select the documents which you want to be signed. These documents must include readable bookmarks.(To know how to include bookmarks to your documents check out the manuals.)</p></div>
+	<button onclick="addDocumentField()" type="button">+</button>
+	<button onclick="delDocumentField()" type="button">-</button>
+	<div id="divDocumentFields">
+
+	</div>
+
+	<input type="submit" value="extract signers from pdf's"/>
+</form>
+
+</body>
+</html>

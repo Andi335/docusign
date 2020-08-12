@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script th:src="${contextPath}+'/webjars/jquery/3.4.1/jquery.js'"></script>
+	<script th:src="${contextPath}+'/webjars/mustache/2.3.0/mustache.js'"></script>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		let endpoint = /*[[${endpoint}]]*/ 'no-url';
+		let endpointStatusSigners = /*[[${endpointStatusSigners}]]*/ 'no-url';
+		let endpointDownloadDocs = /*[[${endpointDownloadDocs}]]*/ 'no-url';
+
+		let statusSignersDivIdPrefix = "statusSignersDiv"
+		/*]]>*/
+	</script>
+	<script type="application/javascript">
+		$(document).ready(
+			function () {
+				init();
+			}
+		);
+
+		function init() {
+
+			$.ajax(
+				endpoint,
+				{
+					success: function (data, status, xhr) {
+						let template = $('#enveopeTmpl').html();
+						let html = "";
+						data.listEnvelopes.forEach(
+							function (envInfo, i) {
+								envInfo['dlDocs'] = "";
+								envInfo['signerStatus'] = "<div><a href='#' onclick='getSignerStatus(\""+envInfo.id+"\", "+i+")'>signers</a></div><div id="+statusSignersDivIdPrefix+i+"></div>";
+								if (envInfo.status === 'completed') {
+									envInfo['dlDocs'] = "<a href='"+endpointDownloadDocs+"?id="+envInfo.id+"'>download</a>";
+								}
+							}
+						);
+						html = Mustache.to_html(template, data);
+						$('#divTest').html(html)
+					}
+				}
+			)
+		}
+
+		function getSignerStatus(envelopeId, divId) {
+
+			$.ajax(
+				endpointStatusSigners+"?envelopeId="+envelopeId,
+				{
+					success: function (data, status, xhr) {
+						let template = $('#signerStatusTmpl').html();
+						let html = "";
+						html = Mustache.to_html(template, data);
+						$('#'+statusSignersDivIdPrefix+divId).append(html)
+					}
+				}
+			)
+		}
+
+
+	</script>
+
+	<script id="enveopeTmpl" type="text/template">
+		<h1>Envelopes Status</h1>
+		<div> <p> You can see all envelopes with it's status and of it's signers. Completed envelopes are downloadable.</p></div>
+		<table border="1">
+			<thead>
+			<tr>
+				<th>ID</th>
+				<th>status</th>
+				<th>documents</th>
+				<th>status of signers</th>
+			</tr>
+			</thead>
+			<tbody>
+			{{#listEnvelopes}}
+			<tr>
+				<td>{{id}}</td>
+				<td>{{status}}</td>
+				<td>{{{dlDocs}}}</td>
+				<td>{{{signerStatus}}}</td>
+			</tr>
+			{{/listEnvelopes}}
+			</tbody>
+		</table>
+	</script>
+
+	<script id="signerStatusTmpl" type="text/template">
+		<table border="1">
+			<thead>
+			<tr>
+				<th>name</th>
+				<th>email</th>
+				<th>status</th>
+			</tr>
+			</thead>
+			<tbody>
+			{{#statusSigners}}
+			<tr>
+				<td>{{name}}</td>
+				<td>{{email}}</td>
+				<td>{{{status}}}</td>
+			</tr>
+			{{/statusSigners}}
+			</tbody>
+		</table>
+	</script>
+
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<div id="divTest">
+
+
+</div>
+</body>
+</html>

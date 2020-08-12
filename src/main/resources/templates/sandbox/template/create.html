@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script name="application/javascript">
+
+
+		function init() {
+
+		}
+
+		function addDocumentField() {
+
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			let nextIndex = divDocumentFields.children.length;
+			divDocumentFields.append(getDocumentFieldNode(nextIndex))
+		}
+
+		function delDocumentField() {
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			if (divDocumentFields.hasChildNodes()) {
+				divDocumentFields.removeChild(divDocumentFields.lastChild);
+			}
+		}
+
+		function getDocumentNames() {
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			let documentNames = [];
+			for (let i = 0; i < divDocumentFields.children.length; i++) {
+				let fileName = divDocumentFields.children[i].children[0].value;
+				if (fileName.length > 0) {
+					documentNames.push(fileName)
+				}
+			}
+			return documentNames;
+		}
+
+		function getDocumentFieldNode(index) {
+			let id = "document[" + index + "]";
+			let documentFieldNode = document.createElement("input");
+			documentFieldNode.id = id;
+			documentFieldNode.name = id;
+			documentFieldNode.type = "file";
+
+			let divDocuments = document.createElement('div');
+			divDocuments.id = "documentChooser[" + index + "]";
+			divDocuments.tag = "Document " + index;
+			divDocuments.appendChild(documentFieldNode);
+			return divDocuments;
+		}
+
+		function getDocumentNameOptions(selectionId) {
+			let selection = document.getElementById(selectionId);
+			console.debug("selection", selection);
+			if (selection) {
+				while (selection.firstChild) {
+					selection.removeChild(selection.firstChild);
+				}
+				let documentNames = getDocumentNames();
+				for (let i = 0; i < documentNames.length; i++) {
+					let indexShiftDocId = (i + 1).toString(10);
+					selection.options[selection.options.length] = new Option(documentNames[i], indexShiftDocId);
+				}
+			}
+		}
+
+		function addRole() {
+
+			let divSignerActions = document.getElementById('divSigner');
+			let nextIndex = divSignerActions.children.length;
+			divSignerActions.append(getRoleNode(nextIndex))
+		}
+
+		function delRole() {
+			let divSignerActions = document.getElementById('divSigner');
+			if (divSignerActions.hasChildNodes()) {
+				divSignerActions.removeChild(divSignerActions.lastChild);
+			}
+		}
+
+		function addRoleAction(divId, namePrefix) {
+
+			let divSignerActions = document.getElementById(divId);
+			let nextIndex = divSignerActions.children.length;
+			divSignerActions.append(getRoleActionNode(nextIndex, namePrefix))
+		}
+
+		function delRoleAction(divId) {
+			let divSignerActions = document.getElementById(divId);
+			if (divSignerActions.hasChildNodes()) {
+				divSignerActions.removeChild(divSignerActions.lastChild);
+			}
+		}
+
+		function getRoleNode(index) {
+			let divRoleId = "divRole" + index;
+			let namePrefix = "roles[" + index + "]";
+			let idSignerAction = "divSignerAction" + index;
+			let idRole = namePrefix + ".role";
+
+			let divRole = document.createElement("div");
+			divRole.id = divRoleId;
+
+			let divRoleAction = document.createElement("div");
+			divRoleAction.id = idSignerAction;
+
+			let inputName = document.createElement("input");
+			inputName.type = "text";
+			inputName.id = idRole;
+			inputName.name = idRole;
+			inputName.placeholder = "Role" + index + " Name";
+
+			let btnAddAction = document.createElement("button");
+			btnAddAction.innerHTML = "+";
+			btnAddAction.type = "button";
+			btnAddAction.addEventListener("click", function () {
+				addRoleAction(idSignerAction, namePrefix)
+			});
+
+			let btnDelAction = document.createElement("button");
+			btnDelAction.innerHTML = "-";
+			btnDelAction.type = "button";
+			btnDelAction.addEventListener("click", function () {
+				delRoleAction(idSignerAction)
+			});
+
+			let divBtns = document.createElement("div");
+			divBtns.appendChild(btnAddAction);
+			divBtns.appendChild(btnDelAction);
+
+			divRole.appendChild(inputName);
+			divRole.appendChild(divBtns);
+			divRole.appendChild(divRoleAction);
+			divRole.appendChild(document.createElement("hr"));
+
+			return divRole;
+		}
+
+		function getRoleActionNode(index, namePrefix) {
+			let idRoleActionGroup = "divSignerActionGroup" + index;
+			let idType = namePrefix + ".actions[" + index + "].type";
+			let idDocument = namePrefix + ".actions[" + index + "].doc";
+
+			let divSignerActionGroup = document.createElement("div");
+			divSignerActionGroup.id = idRoleActionGroup;
+
+			let selType = document.createElement("select");
+			let types = getActionTypes();
+			selType.name = idType;
+			for (let i = 0; i < types.length; i++) {
+				selType.options[selType.options.length] = new Option(types[i], types[i]);
+			}
+
+			let selDocument = document.createElement("select");
+			let documentNames = getDocumentNames();
+			selDocument.id = idDocument;
+			selDocument.name = idDocument;
+			for (let i = 0; i < documentNames.length; i++) {
+				let indexShiftDocId = (i + 1).toString(10);
+				selDocument.options[selDocument.options.length] = new Option(documentNames[i], indexShiftDocId);
+			}
+
+			selDocument.addEventListener("focus", function () {
+				getDocumentNameOptions(idDocument);
+			});
+
+			divSignerActionGroup.appendChild(selType);
+			divSignerActionGroup.appendChild(selDocument);
+			return divSignerActionGroup;
+
+		}
+
+		function getActionTypes() {
+			return ['SIGN', 'VIEW', 'ACKN']
+		}
+
+		function noFormRedirect(event) {
+			event.preventDefault()
+		}
+
+
+	</script>
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<h1>SANDBOX</h1>
+<!--<form method="post" enctype="multipart/form-data" th:action="${endpoint}" onsubmit="noFormRedirect()">-->
+<form method="POST" enctype="multipart/form-data" th:action="${endpoint}" onsubmit="noFormRedirect()">
+	<h1>Create Template</h1>
+	<div> <p> Define a template name.</p></div>
+
+	<input type="text" id="templateName" name="templateName" placeholder="template name">
+	<h2>Documents</h2>
+	<div> <p> Select the documents which you want to be signed.</p></div>
+
+	<button onclick="addDocumentField()" type="button">+</button>
+	<button onclick="delDocumentField()" type="button">-</button>
+	<div id="divDocumentFields">
+
+	</div>
+
+
+	<h2>Roles</h2>
+	<div> <p> Select a number of roles and define the role name. Choose for each role what it should do with the documents(sign,view, acknoledge)</p></div>
+
+	<button onclick="addRole()" type="button">+</button>
+	<button onclick="delRole()" type="button">-</button>
+	<hr>
+	<div id="divSigner">
+
+	</div>
+
+	<h2>Options</h2>
+	<div> <p>When there are multiple signer you can choose if they can sign their document at the same time or in a specific order.</p>
+	</div>
+
+	<label for="parallelSigning">parallel signing:</label><input type="checkbox" id="parallelSigning" name="parallelSigning" checked><br>
+	<div> <p>Define the days when the envelope should expire and when the signer should be reminded to sign.</p></div>
+	<input type="text" id="expirationDays" name="expirationDays" placeholder="expires in (days)">
+	<input type="text" id="expirationReminderDays" name="expirationReminderDays" placeholder="remind before expiration in (days)">
+
+	<br><br>
+	<input type="submit" value="create template"/>
+</form>
+
+</body>
+</html>

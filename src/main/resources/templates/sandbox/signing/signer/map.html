@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script th:src="${contextPath}+'/webjars/jquery/3.4.1/jquery.js'"></script>
+	<script th:src="${contextPath}+'/webjars/mustache/2.3.0/mustache.js'"></script>
+
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		let endpoint = /*[[${endpoint}]]*/ 'no-url';
+		let signerFields = /*[[${signerFields}]]*/ 'no-url';
+		/*]]>*/
+	</script>
+
+
+	<script type="application/javascript">
+
+		console.debug(signerFields);
+
+		$(document).ready(
+			function () {
+				createROleMappingTemplate();
+			}
+		);
+
+		function createROleMappingTemplate() {
+			if (signerFields && signerFields.hasOwnProperty('signerFields')) {
+				let template = $('#viewTemplateInfo').html();
+				let roles = [];
+
+				if (signerFields['signerFields'].length > 0) {
+					let c1 = 0;
+					signerFields['signerFields'].forEach(
+						function (signerRole) {
+							roles.push(
+								{
+									role: signerRole,
+									counter: c1
+								}
+							);
+							c1++;
+						}
+					);
+					console.log(roles)
+					let html = Mustache.to_html(template, {roles: roles, processId: signerFields.processId});
+					$('#rolesMapping').html(html)
+				}
+				else {
+					$('#divForm').html("<p><i>No bookarks found in given documents!</i></p>")
+				}
+
+
+			}
+		}
+	</script>
+
+
+
+
+	<script id="viewTemplateInfo" type="text/template">
+		<input type="hidden" id="processId" name="processId" value="{{processId}}">
+		<table border="1">
+			<thead>
+			<tr>
+				<th>role</th>
+				<th>name</th>
+				<th>mail</th>
+			</tr>
+			</thead>
+			<tbody>
+			<h2>{{#roles}}</h2>
+			<tr>
+				<input type="hidden" id="signerRoleMapForms[{{counter}}].role" name="signerRoleMapForms[{{counter}}].role" value="{{role}}">
+				<td>{{role}}</td>
+				<td><input type="text" id="signerRoleMapForms[{{counter}}].name" name="signerRoleMapForms[{{counter}}].name"></td>
+				<td><input type="text" id="signerRoleMapForms[{{counter}}].email" name="signerRoleMapForms[{{counter}}].email"></td>
+			</tr>
+			{{/roles}}
+			</tbody>
+		</table>
+
+	</script>
+
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<h2>Map roles to signers</h2>
+<div id="divForm">
+<div><p>Enter the name and eMail for each Role.</p></div>
+<form method="get" th:action="${endpoint}">
+	<div id="rolesMapping"></div>
+	<input type="submit" value="send envelope">
+</form>
+</div>
+
+</body>
+</html>

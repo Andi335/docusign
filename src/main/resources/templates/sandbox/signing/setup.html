@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script name="application/javascript">
+
+
+		function init() {
+
+		}
+
+		function addDocumentField() {
+
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			let nextIndex = divDocumentFields.children.length;
+			divDocumentFields.append(getDocumentFieldNode(nextIndex))
+		}
+
+		function delDocumentField() {
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			if (divDocumentFields.hasChildNodes()) {
+				divDocumentFields.removeChild(divDocumentFields.lastChild);
+			}
+		}
+
+		function getDocumentNames() {
+			let divDocumentFields = document.getElementById('divDocumentFields');
+			let documentNames = [];
+			for (let i = 0; i < divDocumentFields.children.length; i++) {
+				let fileName = divDocumentFields.children[i].children[0].value;
+				if (fileName.length > 0) {
+					documentNames.push(fileName)
+				}
+			}
+			return documentNames;
+		}
+
+		function getDocumentFieldNode(index) {
+			let id = "document[" + index + "]";
+			let documentFieldNode = document.createElement("input");
+			documentFieldNode.id = id;
+			documentFieldNode.name = id;
+			documentFieldNode.type = "file";
+
+			let divDocuments = document.createElement('div');
+			divDocuments.id = "documentChooser[" + index + "]";
+			divDocuments.tag = "Document " + index;
+			divDocuments.appendChild(documentFieldNode);
+			return divDocuments;
+		}
+
+		function getDocumentNameOptions(selectionId) {
+			let selection = document.getElementById(selectionId);
+			console.debug("selection", selection);
+			if (selection) {
+				while (selection.firstChild) {
+					selection.removeChild(selection.firstChild);
+				}
+				let documentNames = getDocumentNames();
+				for (let i = 0; i < documentNames.length; i++) {
+					let indexShiftDocId = (i + 1).toString(10);
+					selection.options[selection.options.length] = new Option(documentNames[i], indexShiftDocId);
+				}
+			}
+		}
+
+		function addSigner() {
+
+			let divSignerActions = document.getElementById('divSigner');
+			let nextIndex = divSignerActions.children.length;
+			divSignerActions.append(getSignerNode(nextIndex))
+		}
+
+		function delSigner() {
+			let divSignerActions = document.getElementById('divSigner');
+			if (divSignerActions.hasChildNodes()) {
+				divSignerActions.removeChild(divSignerActions.lastChild);
+			}
+		}
+
+		function addSignerAction(divId, namePrefix) {
+
+			let divSignerActions = document.getElementById(divId);
+			let nextIndex = divSignerActions.children.length;
+			divSignerActions.append(getSignerActionNode(nextIndex, namePrefix))
+		}
+
+		function delSignerAction(divId) {
+			let divSignerActions = document.getElementById(divId);
+			if (divSignerActions.hasChildNodes()) {
+				divSignerActions.removeChild(divSignerActions.lastChild);
+			}
+		}
+
+		function getSignerNode(index) {
+			let divSignerId = "divSigner" + index;
+			let namePrefix = "signers[" + index + "]";
+			let idSignerAction = "divSignerAction" + index;
+			let idName = namePrefix + ".name";
+			let idMail = namePrefix + ".mail";
+
+			let divSigner = document.createElement("div");
+			divSigner.id = divSignerId;
+
+			let divSignerAction = document.createElement("div");
+			divSignerAction.id = idSignerAction;
+
+			let inputName = document.createElement("input");
+			inputName.type = "text";
+			inputName.name = idName;
+			inputName.placeholder = "Signer" + index + " Name";
+
+			let inputMail = document.createElement("input");
+			inputMail.type = "text";
+			inputMail.name = idMail;
+			inputMail.placeholder = "Signer" + index + " Mail";
+
+			let btnAddAction = document.createElement("button");
+			btnAddAction.innerHTML = "+";
+			btnAddAction.type = "button";
+			btnAddAction.addEventListener("click", function () {
+				addSignerAction(idSignerAction, namePrefix)
+			});
+
+			let btnDelAction = document.createElement("button");
+			btnDelAction.innerHTML = "-";
+			btnDelAction.type = "button";
+			btnDelAction.addEventListener("click", function () {
+				delSignerAction(idSignerAction)
+			});
+
+			let divBtns = document.createElement("div");
+			divBtns.appendChild(btnAddAction);
+			divBtns.appendChild(btnDelAction);
+
+			divSigner.appendChild(inputName);
+			divSigner.appendChild(inputMail);
+			divSigner.appendChild(divBtns);
+			divSigner.appendChild(divSignerAction);
+			divSigner.appendChild(document.createElement("hr"));
+
+			return divSigner;
+		}
+
+		function getSignerActionNode(index, namePrefix) {
+			let idSignerActionGroup = "divSignerActionGroup" + index;
+			let idType = namePrefix + ".actions[" + index + "].type";
+			let idDocument = namePrefix + ".actions[" + index + "].doc";
+
+			let divSignerActionGroup = document.createElement("div");
+			divSignerActionGroup.id = idSignerActionGroup;
+
+			let selType = document.createElement("select");
+			let types = getActionTypes();
+			selType.name = idType;
+			for (let i = 0; i < types.length; i++) {
+				selType.options[selType.options.length] = new Option(types[i], types[i]);
+			}
+
+			let selDocument = document.createElement("select");
+			let documentNames = getDocumentNames();
+			selDocument.id = idDocument;
+			selDocument.name = idDocument;
+			for (let i = 0; i < documentNames.length; i++) {
+				let indexShiftDocId = (i + 1).toString(10);
+				selDocument.options[selDocument.options.length] = new Option(documentNames[i], indexShiftDocId);
+			}
+
+			selDocument.addEventListener("focus", function () {
+				getDocumentNameOptions(idDocument);
+			});
+
+			divSignerActionGroup.appendChild(selType);
+			divSignerActionGroup.appendChild(selDocument);
+			return divSignerActionGroup;
+
+		}
+
+		function getActionTypes() {
+			return ['SIGN', 'VIEW', 'ACKN']
+		}
+
+		function noFormRedirect(event) {
+			event.preventDefault()
+		}
+
+
+	</script>
+</head>
+<body>
+<div th:replace="fragments/header :: header" th:with="endpointHome=${endpointHome}, endpointHome=${endpointLogout}"></div>
+<hr>
+<h1>SANDBOX</h1>
+<!--<form method="post" enctype="multipart/form-data" th:action="${endpoint}" onsubmit="noFormRedirect()">-->
+<form method="POST" enctype="multipart/form-data" th:action="${endpoint}" onsubmit="noFormRedirect()">
+	<h2>Initiator</h2>
+	<p th:text="${initiatorname} + ' ('+${initiatormail}+')'"></p>
+	<h2>Documents</h2>
+	<div><p> Select the documents which you want to be signed.</p></div>
+	<button onclick="addDocumentField()" type="button">+</button>
+	<button onclick="delDocumentField()" type="button">-</button>
+	<div id="divDocumentFields">
+
+	</div>
+
+
+	<h2>Signers</h2>
+	<div><p> Select a number of signers and define their names an email adress. Choose for each signer what he should do with the documents(sign,view, acknoledge).</p></div>
+	<button onclick="addSigner()" type="button">+</button>
+	<button onclick="delSigner()" type="button">-</button>
+	<hr>
+	<div id="divSigner">
+
+	</div>
+
+	<h2>Options</h2>
+	<div><p>When there are multiple signer you can choose if they can sign their document at the same time or in a specific order.</p>
+		<label for="parallelSigning">parallel signing:</label><input type="checkbox" id="parallelSigning" name="parallelSigning" checked><br>
+		<div><p>Define the days when the envelope should expire and when the signer should be reminded to sign.</p></div>
+		<input type="text" id="expirationDays" name="expirationDays" placeholder="expires in (days)" checked>
+		<input type="text" id="expirationReminderDays" name="expirationReminderDays" placeholder="remind before expiration in (days)" checked>
+
+		<br><br>
+		<input type="submit" value="send to sign"/>
+</form>
+
+</body>
+</html>
